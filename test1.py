@@ -30,7 +30,6 @@ def test_os():
 
 
 def test_file():
-    import os
     with open("1.txt", 'a+') as f:
         f.write("hello world")
     with open("1.txt", 'r') as f:
@@ -65,6 +64,17 @@ def test_args():
     print(args.root, args.port)
 
 
+def test_process():
+    import os
+    os.system("ping baidu.com")
+    print("1")
+    import subprocess
+    proc = subprocess.Popen(["ping", "baidu.com"], stdout=subprocess.PIPE)
+    out, err = proc.communicate()
+    print(out.decode('gb2312'))
+    print(err)
+
+
 # test_turtle()
 # test_os()
 # test_file()
@@ -74,3 +84,4 @@ def test_args():
 # test_str()
 # test_time()
 # test_args()
+# test_process()
