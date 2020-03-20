@@ -75,6 +75,24 @@ def test_process():
     print(err)
 
 
+def test_collections():
+    print("list:")
+    l = []
+    for i in range(1, 10):
+        l.append(i)
+    for i in l:
+        print(i)
+
+    print("collections:")
+    import collections
+    a = collections.deque()
+    for i in range(1, 10):
+        a.append(i)
+    while(len(a) > 0):
+        print(a.pop())
+    pass
+
+
 # test_turtle()
 # test_os()
 # test_file()
@@ -85,3 +103,4 @@ def test_process():
 # test_time()
 # test_args()
 # test_process()
+# test_collections()
