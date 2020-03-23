@@ -92,13 +92,16 @@ def test_collections():
         print(a.pop())
     pass
 
+
 def test_except():
-    n = input("input an integer:")
-    try:
-        n = int(n)
-        print(n)
-    except ValueError:
-        print("input error")
+    while True:
+        n = input("input an integer:")
+        try:
+            n = int(n)
+            break
+        except ValueError:
+            print("input error, re-input.")
+    print(n)
 
 
 # test_turtle()
