@@ -92,6 +92,14 @@ def test_collections():
         print(a.pop())
     pass
 
+def test_except():
+    n = input("input an integer:")
+    try:
+        n = int(n)
+        print(n)
+    except ValueError:
+        print("input error")
+
 
 # test_turtle()
 # test_os()
@@ -104,3 +112,4 @@ def test_collections():
 # test_args()
 # test_process()
 # test_collections()
+# test_except()
