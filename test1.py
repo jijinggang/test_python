@@ -64,6 +64,13 @@ def test_args():
     print(args.root, args.port)
 
 
+def test_kwargs(*args, **kwargs):
+    for arg in args:
+        print(arg)
+    for k, v in kwargs.items():
+        print(k, v)
+
+
 def test_process():
     import os
     os.system("ping baidu.com")
@@ -113,6 +120,7 @@ def test_except():
 # test_str()
 # test_time()
 # test_args()
+# test_kwargs("a1", "a2", k1="v1", k2="v2")
 # test_process()
 # test_collections()
 # test_except()
