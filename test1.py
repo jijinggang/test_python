@@ -67,7 +67,9 @@ def test_args():
 def test_kwargs(*args, **kwargs):
     for arg in args:
         print(arg)
-    for k, v in kwargs.items():
+    final_kwargs = {"k1": "v1_default", "k2": "v2_default"}
+    final_kwargs.update(kwargs)
+    for k, v in final_kwargs.items():
         print(k, v)
 
 
@@ -120,7 +122,7 @@ def test_except():
 # test_str()
 # test_time()
 # test_args()
-# test_kwargs("a1", "a2", k1="v1", k2="v2")
+# test_kwargs("a1", "a2", k1="v1")
 # test_process()
 # test_collections()
 # test_except()
