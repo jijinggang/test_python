@@ -1,4 +1,7 @@
 import dis
+import inspect
+import operator
+import builtins
 TEST_CODE = """
 def f1(x):
     return 2 * x
@@ -18,11 +21,11 @@ class Function:
     def __call__(self, *args):
         return self.run(*args)
 
-    def _run_command(self, instruction, arg):
-        #print(opname, arg)
+    def _run_instruction(self, instruction, arg):
         opname = dis.opname[instruction]
+        #print(opname, arg)
         func = getattr(self, opname)
-        func(arg)
+        return func(arg)
 
     def _parse_arg(self, instruction, value, pos):
         if(instruction in dis.hasname):
@@ -38,8 +41,9 @@ class Function:
         return arg
 
     def run(self, *args):
-        for arg in args:
-            self._stack.append(arg)
+        func = dis.types.FunctionType(self._code, self._globals)
+        kwargs = inspect.getcallargs(func, *args)
+        self._locals.update(kwargs)
 
         pos = 0
         co_code = self._code.co_code
@@ -47,11 +51,12 @@ class Function:
             instruction = co_code[pos]
             pos += 1
             arg = None
-            if(instruction >= dis.HAVE_ARGUMENT):
-                arg = self._parse_arg(instruction, co_code[pos], pos+1)
-                pos += 1
-            result = self._run_command(instruction, arg)
+            #if(instruction >= dis.HAVE_ARGUMENT):
+            arg = self._parse_arg(instruction, co_code[pos], pos+1)
+            pos += 1
+            result = self._run_instruction(instruction, arg)
             if result is not None:
+                #print("return ", result)
                 return result
 
     def _popn(self, n):
@@ -59,18 +64,15 @@ class Function:
         self._stack[-n:] = []
         return v
 
-    def _load(self, name, list):
-        if name in list:
-            return list[name]
-        return None
-
     def _load_local(self, name):
-        return self._load(name, self._locals)
+        return self._locals.get(name)
 
+    def _load_builtins(self, name):
+        return builtins.__dict__.get(name)
     def _load_global(self, name):
-        v = self._load(name, self._globals)
-        if not v:
-            v = self._load(name, __builtins__)
+        v = self._globals.get(name)
+        if v == None:
+            v = self._load_builtins(name)
         return v
 
     def LOAD_CONST(self, arg):
@@ -86,7 +88,7 @@ class Function:
 
     def LOAD_NAME(self, name):
         v = self._load_local(name)
-        if not v:
+        if v == None:
             v = self._load_global(name)
         self._stack.append(v)
 
@@ -104,7 +106,7 @@ class Function:
         args = self._popn(argc)
         func = self._stack.pop()
         result = func(*args)
-        self._stack.push(result)
+        self._stack.append(result)
 
     def POP_TOP(self, arg):
         self._stack.pop()
@@ -115,12 +117,14 @@ class Function:
     def BINARY_ADD(self, arg):
         a1 = self._stack.pop()
         a2 = self._stack.pop()
-        self._stack.push(operator.add(a1, a2))
+        self._stack.append(operator.add(a1, a2))
 
     def BINARY_MULTIPLY(self, arg):
         a1 = self._stack.pop()
         a2 = self._stack.pop()
-        self._stack.push(operator.mul(a1, a2))
+        self._stack.append(operator.mul(a1, a2))
+
+#print(dis.dis(compile(TEST_CODE, "", "single")))
 
 
 vm = Function(compile(TEST_CODE, "", "exec"))
