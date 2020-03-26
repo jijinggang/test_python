@@ -4,10 +4,10 @@ import operator
 import builtins
 TEST_CODE = """
 def f1(x):
-    return 2 * x
+    return  (x ** 2) + 2*x + 1
 def f2(x,y):
-    return f1(x) + y
-print(f2(10,1))
+    return (f1(x) +f1(y))/2
+print(f2(3,4))
 """
 
 
@@ -21,11 +21,16 @@ class Function:
     def __call__(self, *args):
         return self.run(*args)
 
-    def _run_instruction(self, instruction, arg):
+    def _dispatch(self, instruction, arg):
         opname = dis.opname[instruction]
         #print(opname, arg)
-        func = getattr(self, opname)
-        return func(arg)
+        if opname.startswith("BINARY_"):
+            return self.BINARY_Any(opname[len("BINARY_"):])
+        elif opname.startswith("UNARY_"):
+            return self.UNARY_Any(opname[len("UNARY_"):])
+        else:
+            func = getattr(self, opname)
+            return func(arg)
 
     def _parse_arg(self, instruction, value, pos):
         if(instruction in dis.hasname):
@@ -50,11 +55,11 @@ class Function:
         while pos < len(co_code):
             instruction = co_code[pos]
             pos += 1
-            arg = None
-            #if(instruction >= dis.HAVE_ARGUMENT):
+            #arg = None
+            # if(instruction >= dis.HAVE_ARGUMENT):
             arg = self._parse_arg(instruction, co_code[pos], pos+1)
             pos += 1
-            result = self._run_instruction(instruction, arg)
+            result = self._dispatch(instruction, arg)
             if result is not None:
                 #print("return ", result)
                 return result
@@ -69,6 +74,7 @@ class Function:
 
     def _load_builtins(self, name):
         return builtins.__dict__.get(name)
+
     def _load_global(self, name):
         v = self._globals.get(name)
         if v == None:
@@ -114,17 +120,57 @@ class Function:
     def RETURN_VALUE(self, arg):
         return self._stack.pop()
 
-    def BINARY_ADD(self, arg):
-        a1 = self._stack.pop()
-        a2 = self._stack.pop()
-        self._stack.append(operator.add(a1, a2))
+    # 一元操作符
+    UNARY_OP = {
+        'POSITIVE': operator.pos,
+        'NEGATIVE': operator.neg,
+        'NOT':      operator.not_,
+        'INVERT':   operator.invert,
+    }
 
-    def BINARY_MULTIPLY(self, arg):
-        a1 = self._stack.pop()
-        a2 = self._stack.pop()
-        self._stack.append(operator.mul(a1, a2))
+    def UNARY_Any(self, opname):
+        x = self._stack.pop()
+        self._stack.append(self.UNARY_OP[opname](x))
 
-#print(dis.dis(compile(TEST_CODE, "", "single")))
+    # 二元操作符
+    BINARY_OP = {
+        'POWER':    operator.pow,
+        'MULTIPLY': operator.mul,
+        'FLOOR_DIVIDE': operator.floordiv,
+        'TRUE_DIVIDE':  operator.truediv,
+        'MODULO':   operator.mod,
+        'ADD':      operator.add,
+        'SUBTRACT': operator.sub,
+        'SUBSCR':   operator.getitem,
+        'LSHIFT':   operator.lshift,
+        'RSHIFT':   operator.rshift,
+        'AND':      operator.and_,
+        'XOR':      operator.xor,
+        'OR':       operator.or_,
+    }
+
+    def BINARY_Any(self, opname):
+        x, y = self._popn(2)
+        self._stack.append(self.BINARY_OP[opname](x, y))
+
+    # 比较操作符
+    COMPARE_OP_FUNC = [
+        operator.lt,
+        operator.le,
+        operator.eq,
+        operator.ne,
+        operator.gt,
+        operator.ge,
+        lambda x, y: x in y,
+        lambda x, y: x not in y,
+        lambda x, y: x is y,
+        lambda x, y: x is not y,
+        lambda x, y: issubclass(x, Exception) and issubclass(x, y),
+    ]
+
+    def COMPARE_OP(self, compare_op_code):
+        x, y = self._popn(2)
+        self._stack.append(self.COMPARE_OP_FUNC[compare_op_code](x, y))
 
 
 vm = Function(compile(TEST_CODE, "", "exec"))
