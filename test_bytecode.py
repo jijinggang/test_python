@@ -4,10 +4,13 @@ import operator
 import builtins
 TEST_CODE = """
 def f1(x):
-    return  (x ** 2) + 2*x + 1
+    if(x < 0) :
+        return 0
+    else:
+        return  (x ** 2) + 2*x + 1
 def f2(x,y):
     return (f1(x) +f1(y))/2
-print(f2(3,4))
+print(f2(-3,4))
 """
 
 
@@ -50,19 +53,23 @@ class Function:
         kwargs = inspect.getcallargs(func, *args)
         self._locals.update(kwargs)
 
-        pos = 0
+        self._instruction_pos = 0
         co_code = self._code.co_code
-        while pos < len(co_code):
-            instruction = co_code[pos]
-            pos += 1
+        while self._instruction_pos < len(co_code):
+            instruction = co_code[self._instruction_pos]
+            self._instruction_pos += 1
             #arg = None
             # if(instruction >= dis.HAVE_ARGUMENT):
-            arg = self._parse_arg(instruction, co_code[pos], pos+1)
-            pos += 1
+            arg = self._parse_arg(
+                instruction, co_code[self._instruction_pos], self._instruction_pos+1)
+            self._instruction_pos += 1
             result = self._dispatch(instruction, arg)
             if result is not None:
                 #print("return ", result)
                 return result
+
+    def _jump(self, pos):
+        self._instruction_pos = pos
 
     def _popn(self, n):
         v = self._stack[-n:]
@@ -119,6 +126,17 @@ class Function:
 
     def RETURN_VALUE(self, arg):
         return self._stack.pop()
+
+    # 跳转指令
+    def POP_JUMP_IF_FALSE(self, arg):
+        x = self._stack.pop()
+        if not x:
+            self._jump(arg)
+
+    def POP_JUMP_IF_TRUE(self, arg):
+        x = self._stack.pop()
+        if x:
+            self._jump(arg)
 
     # 一元操作符
     UNARY_OP = {
