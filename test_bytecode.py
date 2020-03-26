@@ -16,10 +16,10 @@ print(f2(-3,4))
 
 class Function:
     def __init__(self, code, globals={}):
-        self._locals = {}
-        self._globals = globals
-        self._stack = []
-        self._code = code
+        self._locals = {}  # 本地变量
+        self._globals = globals  # 全局变量
+        self._stack = []  # 指令栈
+        self._code = code  # 字节码
 
     def __call__(self, *args):
         return self.run(*args)
@@ -49,6 +49,7 @@ class Function:
         return arg
 
     def run(self, *args):
+        # 把参数列表信息存入本地变量区
         func = dis.types.FunctionType(self._code, self._globals)
         kwargs = inspect.getcallargs(func, *args)
         self._locals.update(kwargs)
@@ -58,15 +59,15 @@ class Function:
         while self._instruction_pos < len(co_code):
             instruction = co_code[self._instruction_pos]
             self._instruction_pos += 1
-            #arg = None
             # if(instruction >= dis.HAVE_ARGUMENT):
+            # 指令和参数各占一个字节
             arg = self._parse_arg(
                 instruction, co_code[self._instruction_pos], self._instruction_pos+1)
             self._instruction_pos += 1
             result = self._dispatch(instruction, arg)
             if result is not None:
                 #print("return ", result)
-                return result
+                return result[0]
 
     def _jump(self, pos):
         self._instruction_pos = pos
@@ -108,6 +109,15 @@ class Function:
     def STORE_NAME(self, arg):
         self._locals[arg] = self._stack.pop()
 
+    def POP_TOP(self, arg):
+        self._stack.pop()
+
+    # 只有此指令直接返回,其他指令无返回(即为None), 采用数组返回避免出现值本身是None
+    def RETURN_VALUE(self, arg):
+        return [self._stack.pop()]
+
+    # 函数,采用递归调用处理
+
     def MAKE_FUNCTION(self, default_argc):
         name = self._stack.pop()
         code = self._stack.pop()
@@ -121,13 +131,8 @@ class Function:
         result = func(*args)
         self._stack.append(result)
 
-    def POP_TOP(self, arg):
-        self._stack.pop()
-
-    def RETURN_VALUE(self, arg):
-        return self._stack.pop()
-
     # 跳转指令
+
     def POP_JUMP_IF_FALSE(self, arg):
         x = self._stack.pop()
         if not x:
