@@ -2,13 +2,6 @@ import dis
 import inspect
 import operator
 import builtins
-TEST_CODE = """
-def f1(x):
-    return 2 * x
-def f2(x,y):
-    return f1(x) + y
-print(f2(10,1))
-"""
 
 
 class Function:
@@ -126,6 +119,21 @@ class Function:
 
 #print(dis.dis(compile(TEST_CODE, "", "single")))
 
+import doctest
+TEST_CODE = """
+def f1(x):
+    return 2 * x
+def f2(x,y):
+    return f1(x) + y
+print(f2(10,1))
+"""
 
-vm = Function(compile(TEST_CODE, "", "exec"))
-vm.run()
+def run_code(code):
+    '''
+    >>> run_code(TEST_CODE)
+    21
+    '''
+    vm = Function(compile(code, "", "exec"))
+    vm.run()
+
+doctest.testmod()
