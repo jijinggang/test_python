@@ -1,3 +1,4 @@
+import doctest
 import dis
 import inspect
 import operator
@@ -75,7 +76,7 @@ class Function:
 
     def _load_global(self, name):
         v = self._globals.get(name)
-        if v == None:
+        if v is None:
             v = self._load_builtins(name)
         return v
 
@@ -92,7 +93,7 @@ class Function:
 
     def LOAD_NAME(self, name):
         v = self._load_local(name)
-        if v == None:
+        if v is None:
             v = self._load_global(name)
         self._stack.append(v)
 
@@ -185,7 +186,7 @@ class Function:
         x, y = self._popn(2)
         self._stack.append(self.COMPARE_OP_FUNC[compare_op_code](x, y))
 
-import doctest
+
 TEST_CODE = """
 def f1(x):
     if(x < 0) :
@@ -197,6 +198,7 @@ def f2(x,y):
 print(f2(-3,4))
 """
 
+
 def run_code(code):
     '''
     >>> run_code(TEST_CODE)
@@ -204,5 +206,6 @@ def run_code(code):
     '''
     vm = Function(compile(code, "", "exec"))
     vm.run()
+
 
 doctest.testmod()
