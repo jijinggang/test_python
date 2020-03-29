@@ -113,6 +113,21 @@ def test_except():
     print(n)
 
 
+def _create_add():
+    sum = 0
+
+    def add(x):
+        nonlocal sum
+        sum += x
+        return sum
+    return add
+
+
+def test_closure():
+    add = _create_add()
+    print([add(i) for i in range(10)])
+    pass
+
 # test_turtle()
 # test_os()
 # test_file()
@@ -126,3 +141,4 @@ def test_except():
 # test_process()
 # test_collections()
 # test_except()
+# test_closure()
