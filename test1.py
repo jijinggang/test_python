@@ -128,6 +128,25 @@ def test_closure():
     print([add(i) for i in range(10)])
     pass
 
+
+def _create_coroutine():
+    print("start coroutine1")
+    sum = 0
+    while True:
+        a = yield
+        sum += a
+        print("recv1:", a, "sum1=", sum)
+    print("close coroutine1")
+
+
+def test_coroutine():
+    co = _create_coroutine()
+    next(co)
+    for i in range(10):
+        co.send(i)
+    co.close()
+
+
 # test_turtle()
 # test_os()
 # test_file()
@@ -142,3 +161,4 @@ def test_closure():
 # test_collections()
 # test_except()
 # test_closure()
+# test_coroutine()
