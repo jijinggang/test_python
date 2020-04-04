@@ -6,13 +6,10 @@ import time
 import sys
 
 session = rh.HTMLSession()
-
 urls = set()
 
 
 def download(url):
-    print(url)
-    return
     if(url in urls):
         return
     time.sleep(0.2)
@@ -32,8 +29,13 @@ def download(url):
 def _down_images_by_title(title_link):
     link = title_link
     while link is not None:
+        try:
+            h = session.get(link).html
+        except Exception as err:
+            print(err, "Sleep 1 and retry...")
+            time.sleep(1)
+            continue
 
-        h = session.get(link).html
         for img in h.find("img.size-medium"):
             download(img.attrs['src'])
         elems = h.find('div.page-links>a:last-child')
@@ -68,14 +70,14 @@ def main(start_url):
             url = _get_next_page(r)
             if url is None:
                 break
-        except requests.exceptions.ConnectionError:
-            print('ConnectionError -- please wait 3 seconds')
-            time.sleep(3)
-        except requests.exceptions.ChunkedEncodingError:
-            print('ChunkedEncodingError -- please wait 3 seconds')
-            time.sleep(3)
-        except:
-            print('Unfortunitely -- An Unknow Error Happened, Please wait 3 seconds')
+        # except requests.exceptions.ConnectionError:
+        #     print('ConnectionError -- please wait 3 seconds')
+        #     time.sleep(3)
+        # except requests.exceptions.ChunkedEncodingError:
+        #     print('ChunkedEncodingError -- please wait 3 seconds')
+        #     time.sleep(3)
+        except Exception as err:
+            print(err)
             time.sleep(3)
 
 
