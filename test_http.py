@@ -1,54 +1,67 @@
 import http.server
-import urllib
 import os.path
 import shutil
 
-ROOT = '.'
+ROOT = ""
+HANDLES = {}
+
+http.server.SimpleHTTPRequestHandler
 
 
-def get_file_list(path):
-    files = os.listdir(path)
-    td_html = ""
-    for file in files:
-        if(os.path.isdir(path+"/"+file)):
-            file += "/"
-        td_html += f'<tr><td><a href="{file}">{file}</a></td></tr>'
-    return f"""<html><body><table>{td_html}</table><body></html>"""
+class _MyHttpdHandler(http.server.BaseHTTPRequestHandler):
 
+    def _do_get_filelist(self, path):
+        files = os.listdir(path)
+        td_html = ""
+        for file in files:
+            if(os.path.isdir(path+"/"+file)):
+                file += "/"
+            td_html += f'<tr><td><a href="{file}">{file}</a></td></tr>'
+        html = f"""<html><body><table>{td_html}</table><body></html>"""
+        self.wfile.write(html.encode())
 
-def write_file_content(w, path):
-    with open(path, 'r') as f:
-        w.write(f.read())
-    pass
+    def _do_get_file(self, path):
+        ext = os.path.splitext(path)[1]
+        func = HANDLES.get(ext.lower())
+        if func:
+            func(path, self.wfile)
+        else:
+            # default
+            if(os.path.isfile(path)):
+                with open(path, 'rb') as f:
+                    shutil.copyfileobj(f, self.wfile)
+                return
 
-
-class MyHttpHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         root = ROOT.replace('\\', '/')
         path = root + self.path
-        print(path)
         if(os.path.isdir(path)):
-            html = get_file_list(path).encode('utf8')
-            self.wfile.write(html)
-            return
-        if(os.path.isfile(path)):
-            with open(path, 'rb') as f:
-                shutil.copyfileobj(f, self.wfile)
-            return
+            self._do_get_filelist(path)
+        else:
+            self._do_get_file(path)
 
     def do_POST(self):
         pass
 
 
-class Httpd:
-    def __init__(self, root=".", port=80):
-        self._root = root
-        self._port = port
-
-    def start(self):
-        handler = MyHttpHandler
-        server = http.server.HTTPServer(('', self._port), handler)
-        server.serve_forever()
+def reg_ext_handler(ext, ext_handler_func):
+    HANDLES[ext] = ext_handler_func
 
 
-Httpd().start()
+def start(root=".", port=80):
+    global ROOT
+    ROOT = root
+    print("start httpd", root, port)
+    server = http.server.HTTPServer(('', port), _MyHttpdHandler)
+    server.serve_forever()
+
+
+def _md_handler(path, wfile):
+    import markdown
+    with open(path, 'r', encoding='utf-8') as f:
+        md = markdown.markdown(f.read())
+        wfile.write(md.encode())
+
+
+reg_ext_handler(".md", _md_handler)
+start()
