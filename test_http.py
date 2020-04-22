@@ -6,12 +6,6 @@ from http import HTTPStatus
 ROOT = ""
 HANDLES = {}
 
-http.server.SimpleHTTPRequestHandler
-
-
-def format_text_plain(text: str):
-    return f'<html><head><head><meta charset="utf-8"></head></head><body>{text}</body></html>'
-
 
 class _MyHttpdHandler(http.server.BaseHTTPRequestHandler):
 
@@ -22,7 +16,7 @@ class _MyHttpdHandler(http.server.BaseHTTPRequestHandler):
             if(os.path.isdir(path+"/"+file)):
                 file += "/"
             td_html += f'<tr><td><a href="{file}">{file}</a></td></tr>'
-        html = f"""<html><body><table>{td_html}</table><body></html>"""
+        html = f"""<html><head><meta charset="utf-8"></head><body><table>{td_html}</table><body></html>"""
         self.wfile.write(html.encode())
 
     def _do_get_file(self, path):
@@ -67,9 +61,21 @@ def _md_handler(path, wfile):
     import markdown
     with open(path, 'r', encoding='utf-8') as f:
         md = markdown.markdown(f.read())
-        html = format_text_plain(md)
+        html = f'<html><head><meta charset="utf-8"></head><body>{md}</body></html>'
         wfile.write(html.encode())
 
 
-reg_ext_handler(".md", _md_handler)
-start()
+def main():
+    import argparse
+    parse = argparse.ArgumentParser()
+    parse.add_argument("--root", type=str,
+                       help="your http file root", default='.')
+    parse.add_argument("--port", type=int, help="http socket port", default=80)
+    args = parse.parse_args()
+
+    reg_ext_handler(".md", _md_handler)
+    start(args.root, args.port)
+
+
+if __name__ == '__main__':
+    main()
