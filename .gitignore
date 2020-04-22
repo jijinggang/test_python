@@ -1,2 +1,4 @@
 crawl.bat
 __pycache__
+/build
+/dist

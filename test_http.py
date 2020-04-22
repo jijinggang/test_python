@@ -2,6 +2,7 @@ import http.server
 import os.path
 import shutil
 import mimetypes
+import urllib.parse
 from http import HTTPStatus
 ROOT = ""
 HANDLES = {}
@@ -20,6 +21,7 @@ class _MyHttpdHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(html.encode())
 
     def _do_get_file(self, path):
+        #print("path:", path)
         mime = mimetypes.guess_type(path)[0]
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-type", f"{mime}; charset=utf-8")
@@ -35,7 +37,7 @@ class _MyHttpdHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         root = ROOT.replace('\\', '/')
-        path = root + self.path
+        path = root + urllib.parse.unquote(self.path)
         if(os.path.isdir(path)):
             self._do_get_filelist(path)
         else:
@@ -59,9 +61,24 @@ def start(root=".", port=80):
 
 def _md_handler(path, wfile):
     import markdown
+    import re
+    content = None
     with open(path, 'r', encoding='utf-8') as f:
-        md = markdown.markdown(f.read())
+        content = f.read()
+
+    pattern = re.compile(r"^---[-]*$", re.MULTILINE)
+    result = re.search(pattern, content)
+    if(result == None):
+        # base markdown
+        md = markdown.markdown(content)
         html = f'<html><head><meta charset="utf-8"></head><body>{md}</body></html>'
+        wfile.write(html.encode())
+    else:
+        # slide
+        import landslide.generator
+        ls = landslide.generator.Generator(
+            source=path, direct=True, embed=True,)
+        html = ls.render()
         wfile.write(html.encode())
 
 
