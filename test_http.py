@@ -76,6 +76,7 @@ def _md_handler(path, wfile):
     else:
         # slide
         import landslide.generator
+        print("THEMES:", landslide.generator.THEMES_DIR)
         ls = landslide.generator.Generator(
             source=path, direct=True, embed=True,)
         html = ls.render()
@@ -96,3 +97,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+"""
+pyinstaller -F -c --add-binary "C:\Program Files\Python\Python37\Lib\site-packages\landslide\themes;landslide\themes" --hidden-import="pkg_resources.py2_warn" .\test_http.py
+"""
