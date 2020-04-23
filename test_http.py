@@ -3,6 +3,8 @@ import os.path
 import shutil
 import mimetypes
 import urllib.parse
+import platform
+import os
 from http import HTTPStatus
 ROOT = ""
 HANDLES = {}
@@ -76,7 +78,6 @@ def _md_handler(path, wfile):
     else:
         # slide
         import landslide.generator
-        print("THEMES:", landslide.generator.THEMES_DIR)
         ls = landslide.generator.Generator(
             source=path, direct=True, embed=True,)
         html = ls.render()
@@ -90,8 +91,11 @@ def main():
                        help="your http file root", default='.')
     parse.add_argument("--port", type=int, help="http socket port", default=80)
     args = parse.parse_args()
-
     reg_ext_handler(".md", _md_handler)
+
+    if platform.system() == 'Windows':
+        os.startfile(f"http://localhost:{args.port}")
+
     start(args.root, args.port)
 
 
