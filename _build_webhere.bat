@@ -1,0 +1,2 @@
+pyinstaller -F -c --add-binary "C:\Program Files\Python\Python37\Lib\site-packages\landslide\themes;landslide\themes" --hidden-import="pkg_resources.py2_warn" .\test_http.py
+move /Y dist\test_http.exe dist\webhere.exe
