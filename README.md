@@ -23,3 +23,6 @@ python test code
 ```
 pyinstaller -F -c --add-binary "C:\Program Files\Python\Python37\Lib\site-packages\landslide\themes;landslide\themes" --hidden-import="pkg_resources.py2_warn" .\test_http.py
 ```
+
+## 更多Python示例代码
+<https://github.com/gto76/python-cheatsheet>
