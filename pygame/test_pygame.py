@@ -5,7 +5,7 @@ import pygame as pg
 
 class MyGame(BaseGame):
     def __init__(self):
-        super(MyGame, self).__init__(500, 500)
+        super().__init__(500, 500)
         self._rect = pg.Rect(100, 100, 10, 10)
 
     def redraw(self):
