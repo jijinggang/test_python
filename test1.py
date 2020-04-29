@@ -1,3 +1,27 @@
+# 浮点数转二进制
+def float2bin(number):
+
+    def int2float(num):
+        while num >= 1:
+            num /= 10
+        return num
+
+    number = 0.0 + number
+    first, dec = str(number).split('.')
+    first = int(first)
+    dec = int(dec)
+    res = bin(first).lstrip("0b") + '.'
+    i = 0
+    while dec and i < 32:
+        first, dec = str((int2float(dec)) * 2).split('.')
+        dec = int(dec)
+        res += first
+        i += 1
+    # for _ in range(len(res.split('.')[1]), 8):  # 补满 8 位
+    #    res += "0"
+    return res
+
+
 def test_turtle():
     import turtle
     turtle.bgcolor(0, 1, 1)
@@ -146,7 +170,7 @@ def test_coroutine():
         co.send(i)
     co.close()
 
-
+# float2bin(1.25)
 # test_turtle()
 # test_os()
 # test_file()
