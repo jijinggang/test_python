@@ -6,6 +6,7 @@ import PyPDF4 as pdf
 # pip install Pillow
 from PIL import Image
 from PyPDF4.pdf import Destination
+from PyPDF4.generic import TextStringObject, NumberObject
 
 
 def show_bookmarks(outlines, indent=0):
@@ -34,13 +35,15 @@ def copy_bookmarks(r: pdf.PdfFileReader, w: pdf.PdfFileWriter):
     _gen_bookmarks(r, w, outlines)
 
 
-def dealImg(imgData):
+def dealImg(imgData, sizeNew):
     with Image.open(io.BytesIO(imgData)) as img:
         # img.save("1.jpg")
+        if TO_GRAY:
+            img = img.convert("L")
 
         # 处理图片
         size = img.size
-        img = img.resize((int(size[0]*RESIZE_RATE), int(size[1]*RESIZE_RATE)))
+        img = img.resize(sizeNew)
 
         stream = io.BytesIO()
         # 将图片保存到stream中
@@ -51,12 +54,15 @@ def dealImg(imgData):
 
 def dealImgObj(imgObj, obj):
 
-    #size = (imgObj['/Width'], imgObj['/Height'])
-
+    size = (imgObj['/Width'], imgObj['/Height'])
+    sizeNew = (int(size[0]*RESIZE_RATE), int(size[1]*RESIZE_RATE))
     data = imgObj.getData()
-    data = dealImg(data)
-    print(len(data))
-    imgObj.setData(data)
+    data = dealImg(data, sizeNew)
+    # print(len(data))
+
+    imgObj._data = data
+    imgObj[TextStringObject('/Width')] = NumberObject(sizeNew[0])
+    imgObj[TextStringObject('/Height')] = NumberObject(sizeNew[1])
 
 
 def dealPage(page):
@@ -76,8 +82,13 @@ def main(pdf_file, output=None):
 
     r = pdf.PdfFileReader(pdf_file)
     w = pdf.PdfFileWriter()
+    index = 0
+    totals = r.getNumPages()
     for page in r.pages:
+        index += 1
+        print(f"page:{index} / {totals}")
         w.addPage(dealPage(page))
+        #newPage = w.addBlankPage()
 
     copy_bookmarks(r, w)
 
@@ -87,6 +98,7 @@ def main(pdf_file, output=None):
         w.write(outputf)
 
 
-RESIZE_RATE = 0.4
-main("E:/book/技术/new/NET CLR via C#(第4版).pdf", "d:/2.pdf")
+RESIZE_RATE = 0.5  # 图片缩小比率
+TO_GRAY = True  # 是否转灰度
+main("E:/book/技术/new/NET CLR via C#(第4版).pdf", "d:/1.pdf")
 #main("d:/1.pdf", "d:/2.pdf")
