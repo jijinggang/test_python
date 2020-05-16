@@ -1,4 +1,7 @@
 # 浮点数转二进制
+from myshell import CheckChange
+
+
 def float2bin(number):
 
     def int2float(num):
@@ -170,23 +173,6 @@ def test_coroutine():
         co.send(i)
     co.close()
 
-
-def call(cmd: str or list, dir=None, exit_on_error=True):
-    import os
-    import subprocess
-    import shlex
-    if isinstance(cmd, str):
-        cmd = shlex.split(cmd, False, False)
-    if not dir:
-        dir = os.getcwd()
-    result = subprocess.call(cmd, shell=True, cwd=dir)
-    if(result != 0):
-        print(f"CALL ERROR {result}:", " ".join(cmd))
-        os.system("pause")
-        exit(result)
-    return result
-
-
 # float2bin(1.25)
 # test_turtle()
 # test_os()
@@ -203,4 +189,3 @@ def call(cmd: str or list, dir=None, exit_on_error=True):
 # test_except()
 # test_closure()
 # test_coroutine()
-call(["dir", "d:"])
