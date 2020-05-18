@@ -29,6 +29,20 @@ def call(cmd: str, dir=None, exit_on_error=True):
     return code
 
 
+# 根据文件或svn版本号检查源文件是否改变,为增量编译提供支持,只有输入和输出的所有文件都没有变化时,才判定为无变化
+# inputs 必须是列表,每一项可以是文件或目录,如果是目录则表示包含目录内的所有文件
+# outputs 必须是列表,每一项可以是文件或目录,如果是目录则表示包含目录内的所有文件
+# key 根据key来指定缓存信息的存放位置,一般为__file__
+# check_file_not_svn 为True表示直接检查输入所有文件的md5,为false则表示用输入文件的svn版本号来判断是否修改; 无论如何设置,对输出文件都会直接用文件的md5来判定
+def run_if_changed(func, inputs, outputs, key, check_file_not_svn=True):
+    ck = CheckChange(inputs, outputs, key, check_file_not_svn)
+    if(ck.check_changed()):
+        func()
+        ck.resave()
+        return True
+    return False
+
+
 # 获取给定目录或文件的svn当前版本号
 # pathfile 如果是目录,则返回该目录下所有文件的最新svn版本号,如果是文件,则返回该文件的最新版本号
 # 返回的版本号是字符串
@@ -82,16 +96,12 @@ def list_all_files(path: str, ignore_path_prefix=["."]):
     return files
 
 
-# 根据文件或svn版本号检查源文件是否改变,为增量编译提供支持,只有输入和输出的所有文件都没有变化时,才判定为无变化
 class CheckChange:
-
-    # inputs 必须是列表,每一项可以是文件或目录,如果是目录则表示包含目录内的所有文件
-    # outputs 必须是列表,每一项可以是文件或目录,如果是目录则表示包含目录内的所有文件
-    # key 根据key来指定缓存信息的存放位置,一般应指定为__file__
-    # check_file_not_svn 为True表示直接检查输入所有文件的md5,为false则表示用输入文件的svn版本号来判断是否修改; 无论如何设置,对输出文件都会直接用文件的md5来判定
     def __init__(self, inputs: list, outputs: list, key: str, check_file_not_svn=True):
 
-        self.file = os.path.join(os.getcwd(), ".checkdb", key+".db")
+        path, name = os.path.split(key)
+        self.file = os.path.join(path, ".checkdb", name+".db")
+        #self.file = os.path.join(os.getcwd(), ".checkdb", key+".db")
         ensure_dir(self.file)
         self.inputs = inputs
         self.outputs = self._compute_files(outputs)
@@ -105,11 +115,13 @@ class CheckChange:
             self.getsize = lambda file: 0
 
     def _compute_files(self, files):
+        results = []
         for file in files:
             if os.path.isdir(file):
-                files.remove(file)
-                files.extend(list_all_files(file))
-        return files
+                results.extend(list_all_files(file))
+            else:
+                results.append(file)
+        return results
 
     def _load(self):
         if(os.path.exists(self.file)):
@@ -147,9 +159,8 @@ def __sample():
     call('dir "program files"', "c:")
     print(md5(r"c:\windows\notepad.exe"))
 
-    ck = CheckChange([r"D:\svn"], [], __file__, False)
-    if(ck.check_changed()):
-        ck.resave()
+    if run_if_changed(lambda: print("run xxx"), [r"D:\svn\GOE"], ["."], __file__, False):
         print("save!!!")
     else:
         print("not change!!")
+
