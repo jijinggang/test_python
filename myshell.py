@@ -3,6 +3,7 @@ import os
 import sys
 import subprocess
 import hashlib
+import re
 
 
 def pause():
@@ -35,28 +36,12 @@ def call(cmd: str, dir=None, exit_on_error=True):
 # key 根据key来指定缓存信息的存放位置,一般为__file__
 # check_file_not_svn 为True表示直接检查输入所有文件的md5,为false则表示用输入文件的svn版本号来判断是否修改; 无论如何设置,对输出文件都会直接用文件的md5来判定
 def run_if_changed(func, inputs, outputs, key, check_file_not_svn=True):
-    ck = CheckChange(inputs, outputs, key, check_file_not_svn)
+    ck = _CheckChange(inputs, outputs, key, check_file_not_svn)
     if(ck.check_changed()):
         func()
         ck.resave()
         return True
     return False
-
-
-# 获取给定目录或文件的svn当前版本号
-# pathfile 如果是目录,则返回该目录下所有文件的最新svn版本号,如果是文件,则返回该文件的最新版本号
-# 返回的版本号是字符串
-def svn_version(pathfile: str) -> str:
-    proc = subprocess.run(
-        f'svn info "{pathfile}"', shell=True, stdout=subprocess.PIPE)
-    import re
-    txt = proc.stdout.decode('gbk')
-    versions = re.findall("^Revision: (\d+)", txt, re.M)
-    try:
-        version = versions[0]
-    except IndexError:
-        sys.exit(txt)
-    return version
 
 
 # 计算文件的md5值
@@ -96,23 +81,53 @@ def list_all_files(path: str, ignore_path_prefix=["."]):
     return files
 
 
-class CheckChange:
+class _CheckChange:
+    # 获取给定目录或文件的svn当前版本号
+    # pathfile 如果是目录,则返回该目录下所有文件的最新svn版本号,如果是文件,则返回该文件的最新版本号
+    # 返回的版本号是字符串
+    @staticmethod
+    def _svn_version(pathfile: str) -> str:
+        proc = subprocess.run(
+            f'svn info "{pathfile}"', shell=True, stdout=subprocess.PIPE)
+        txt = proc.stdout.decode('gbk')
+        versions = re.findall("^Revision: (\d+)", txt, re.M)
+        try:
+            version = versions[0]
+        except IndexError:
+            sys.exit(txt)
+        return version
+
+    @staticmethod
+    def _svn_modifies(pathfile: str) -> list:
+        proc = subprocess.run(
+            f'svn status "{pathfile}"', shell=True, stdout=subprocess.PIPE)
+        txt = proc.stdout.decode('gbk')
+        files = re.findall("^M\s+(.+)\r?$", txt, re.M)
+        return [file.rstrip('\r') for file in files]
+
+    @staticmethod
+    def get_funcs(file_not_svn):
+        if(file_not_svn):
+            return md5, os.path.getsize
+        else:
+            return _CheckChange._svn_version, lambda x: len(_CheckChange._svn_modifies(x))
+
     def __init__(self, inputs: list, outputs: list, key: str, check_file_not_svn=True):
 
         path, name = os.path.split(key)
         self.file = os.path.join(path, ".checkdb", name+".db")
-        #self.file = os.path.join(os.getcwd(), ".checkdb", key+".db")
+        # self.file = os.path.join(os.getcwd(), ".checkdb", key+".db")
         ensure_dir(self.file)
-        self.inputs = inputs
-        self.outputs = self._compute_files(outputs)
-        self.md5 = md5
-        self.getsize = os.path.getsize
-        if check_file_not_svn:
-            self.inputs = self._compute_files(inputs)
+
+        self.scanfiles = []
+        self.scanfiles.append((True, self._compute_files(outputs)))
+        if(check_file_not_svn):
+            self.scanfiles.append((True, self._compute_files(inputs)))
         else:
             self.file += "svn"
-            self.md5 = svn_version
-            self.getsize = lambda file: 0
+            self.scanfiles.append((False, inputs))
+            for f in inputs:
+                self.scanfiles.append((True, _CheckChange._svn_modifies(f)))
 
     def _compute_files(self, files):
         results = []
@@ -129,29 +144,27 @@ class CheckChange:
                 kv = json.load(f)
                 return kv
         return {}
-
     # 在脚本执行完之后调用,重新设置缓存信息
 
     def resave(self):
         kv = {}
-        for file in self.inputs:
-            if os.path.exists(file):
-                kv[file] = {"md5": self.md5(file), "size": self.getsize(file)}
-        for file in self.outputs:
-            if os.path.exists(file):
-                kv[file] = {"md5": md5(file), "size": os.path.getsize(file)}
+        for file_not_svn, files in self.scanfiles:
+            func_md5, func_getsize = _CheckChange.get_funcs(file_not_svn)
+            for file in files:
+                if os.path.exists(file):
+                    kv[file] = {"md5": func_md5(
+                        file), "size": func_getsize(file)}
         with open(self.file, 'w', encoding='utf-8') as f:
             json.dump(kv, f)
 
     # 在调用脚本之前调用,用户判断对应的源文件和目标文件是否完全无变更
     def check_changed(self):
         kv = self._load()
-        for file in self.inputs:
-            if (file not in kv) or (not os.path.exists(file)) or self.getsize(file) != kv[file]["size"] or self.md5(file) != kv[file]["md5"]:
-                return True
-        for file in self.outputs:
-            if (file not in kv) or (not os.path.exists(file)) or os.path.getsize(file) != kv[file]["size"] or md5(file) != kv[file]["md5"]:
-                return True
+        for file_not_svn, files in self.scanfiles:
+            func_md5, func_getsize = _CheckChange.get_funcs(file_not_svn)
+            for file in files:
+                if file not in kv or (not os.path.exists(file)) or func_getsize(file) != kv[file]["size"] or func_md5(file) != kv[file]["md5"]:
+                    return True
         return False
 
 
@@ -159,8 +172,10 @@ def __sample():
     call('dir "program files"', "c:")
     print(md5(r"c:\windows\notepad.exe"))
 
-    if run_if_changed(lambda: print("run xxx"), [r"D:\svn\GOE"], ["."], __file__, False):
+    if run_if_changed(lambda: print("run xxx"), [r"D:\svn\GOE\GOEngine\doc"], ["."], __file__, False):
         print("save!!!")
     else:
         print("not change!!")
 
+
+# __sample()
