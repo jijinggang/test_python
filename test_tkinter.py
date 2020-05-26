@@ -1,7 +1,33 @@
+import PySimpleGUI as sg
+
+
+def main():
+    sg.theme('DarkAmber')
+
+    layout = [
+
+        [sg.Text("Name", size=(6, 1)), sg.InputText()],
+        [sg.Text("Password", size=(6, 1)), sg.InputText(password_char="*")],
+        [sg.InputText('选择一个文件', use_readonly_for_disable=True),
+         sg.FileBrowse()],
+        [sg.OK(), sg.Cancel()]
+    ]
+    win = sg.Window('App', layout)
+    while True:
+        event, values = win.read()
+        if event in ('OK'):
+            sg.Popup(
+                f"Name:{values[0]}, Password:{values[1]}, File:{values[2]}")
+        elif event in(None, 'Cancel'):
+            sg.Popup("Cancel")
+            break
+    win.close()
+
+
+"""
 import tkinter as tk
 import tkinter.messagebox as messagebox
 import tkinter.filedialog as filedialog
-
 
 class App(tk.Frame):
     def __init__(self):
@@ -39,6 +65,7 @@ class App(tk.Frame):
 
 def main():
     App().show()
+"""
 
 
 if __name__ == '__main__':
