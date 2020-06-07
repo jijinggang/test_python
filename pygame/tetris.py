@@ -68,13 +68,16 @@ class State(enum.Enum):
 class Tetris:
 
     def __init__(self, w, h):
-        self.init_data(w, h)
+        self.w = w
+        self.h = h
+        self.init_data()
         px.init(w, h, caption="俄罗斯方块", fullscreen=True)
 
         px.run(self.update, self.draw)
 
-    def init_data(self, w: int, h: int):
-
+    def init_data(self):
+        w = self.w
+        h = self.h
         self.cx = 10  # 水平方向格子数
         self.cy = 15  # 垂直方向格子数
         self.GRID = 8  # 格子大小
@@ -96,6 +99,9 @@ class Tetris:
 
     def update(self):
         if self.state == State.END:
+            if(px.btnp(px.KEY_ENTER)):
+                self.state = State.NORMAL
+                self.init_data()
             return
         elif self.state == State.NORMAL:
             if self.curr_box:
@@ -114,7 +120,7 @@ class Tetris:
     def judge_conflict(self, box: Box):
         data = box.data()
         for i, j in data:
-            if i < 0 or i >= self.cx or j < 0 or j >= self.cy or self.data[i][j]:
+            if i < 0 or i >= self.cx or j >= self.cy or (j >= 0 and self.data[i][j]):
                 return True
         return False
 
@@ -125,9 +131,9 @@ class Tetris:
             box.rotate()
             if not self.judge_conflict(box):
                 self.curr_box.rotate()
-        elif px.btn(px.KEY_LEFT):
+        elif px.btnp(px.KEY_LEFT, 5, 5):
             self._check_and_move(-1, 0)
-        elif px.btn(px.KEY_RIGHT):
+        elif px.btnp(px.KEY_RIGHT, 5, 5):
             self._check_and_move(1, 0)
         if px.btn(px.KEY_DOWN):
             self.speedRate = 10
@@ -148,6 +154,7 @@ class Tetris:
                 if(self.data[i][j]):
                     # 失败
                     self.state = State.END
+                    print(self.data)
                     return
                 self.data[i][j] = True
             self.erase_full()
@@ -155,7 +162,7 @@ class Tetris:
 
     # 消掉一行
     def _erase_line(self, line):
-        for j in range(line, 1, -1):
+        for j in range(line, 0, -1):
             for i in range(self.cx):
                 self.data[i][j] = self.data[i][j-1]
 
@@ -173,9 +180,12 @@ class Tetris:
             self._erase_line(j)
             # 计算积分
         SCORE = {1: 100, 2: 300, 3: 700, 4: 1500}
-
+        last_score = self.score
         if(count > 0):
             self.score += SCORE[count]
+        # 加速
+        if(last_score//10000 != self.score // 10000):
+            self.speed += 1
 
     # 判断并实际移动
 
@@ -233,6 +243,8 @@ class Tetris:
         if not self.curr_box:
             return
         for i, j in self.curr_box.data():
+            if j < 0:
+                continue
             x, y = self.getpos(i, j)
             self.draw_block(x, y, True)
 
