@@ -5,7 +5,7 @@ python test code
 - Python3
 - VSCode
 - Python插件
-- kite 插件及 kite 后台服务
+- Python插件选项中,打开Flake8 Enabled 并且最好增加 Flake8 Args "--ignore=E50"来忽略单行长度80的检查
 - 部分非标准库需要用pip install安装
 
 ## 打包
