@@ -1,0 +1,7 @@
+ipython
+requests
+pyxel
+PySimpleGUI
+PyPDF2
+Pillow
+fastapi
