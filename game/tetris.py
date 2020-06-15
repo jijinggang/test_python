@@ -36,14 +36,10 @@ class Box:
     def __init__(self, offset_x=0, offset_y=0):
         self._data = random.choice(BOXS).copy()  # 各方块相对起始点(第一个方块)的位置
         # 移动后的起始点(第一个方块)的偏移
-        self._x = offset_x
-        self._y = offset_y
+        self._x, self._y = offset_x, offset_y
 
     def rotate(self):
-        new_data = []
-        for x, y in self._data:
-            new_data.append((-y, x))
-        self._data = new_data
+        self._data = [(-y, x) for x, y in self._data]
 
     def move(self, diff_x, diff_y):
         self._x += diff_x
@@ -52,10 +48,7 @@ class Box:
     def data(self):
         if self._x == 0 and self._y == 0:
             return self._data
-        new_data = []
-        for x, y in self._data:
-            new_data.append((x+self._x, y+self._y))
-        return new_data
+        return [(x + self._x, y + self._y) for x, y in self._data]
 
 
 # 记录当前游戏状态
@@ -83,12 +76,11 @@ class Tetris:
         self.GRID = 8  # 格子大小
 
         # 格子区左上角位置
-        self.left = (w*3//4 - self.cx*self.GRID) // 2
-        self.top = (h-self.cy*self.GRID)//2
+        self.left = (w * 3 // 4 - self.cx * self.GRID) // 2
+        self.top = (h - self.cy * self.GRID) // 2
 
         # 桌面上的方块数据,未填充为False,填充为True
-        self.data = [[False for j in range(self.cy)]
-                     for i in range(self.cx)]
+        self.data = [[False for j in range(self.cy)] for i in range(self.cx)]
         self.state: State = State.NORMAL  # 是否失败
         self.curr_box: Box = None
         self.next_box: Box = None
@@ -111,8 +103,8 @@ class Tetris:
                 if self.next_box:
                     self.curr_box = self.next_box
                 else:
-                    self.curr_box = Box((self.cx-1)//2, 0)
-                self.next_box = Box((self.cx-1)//2, 0)
+                    self.curr_box = Box((self.cx - 1) // 2, 0)
+                self.next_box = Box((self.cx - 1) // 2, 0)
         elif self.state == State.ERASING:
             pass
 
@@ -127,8 +119,7 @@ class Tetris:
     # 对按键做出响应
     def check_key(self):
         if px.btnp(px.KEY_UP):
-            box = copy.copy(self.curr_box)
-            box.rotate()
+            (box := copy.copy(self.curr_box)).rotate()
             if not self.judge_conflict(box):
                 self.curr_box.rotate()
         elif px.btnp(px.KEY_LEFT, 5, 5):
@@ -143,9 +134,9 @@ class Tetris:
     # 定时向下移动
     def check_time(self):
         # 获取某个格子对应的左上角坐标
-        time_span = 1/(self.speed*self.speedRate)
+        time_span = 1 / (self.speed * self.speedRate)
         curr_time = time.time()
-        if(curr_time-self.lastTime) < time_span:
+        if(curr_time - self.lastTime) < time_span:
             return
         self.lastTime = curr_time
         if not self._check_and_move(0, 1):
@@ -154,7 +145,7 @@ class Tetris:
                 if(self.data[i][j]):
                     # 失败
                     self.state = State.END
-                    print(self.data)
+                    # print(self.data)
                     return
                 self.data[i][j] = True
             self.erase_full()
@@ -164,7 +155,7 @@ class Tetris:
     def _erase_line(self, line):
         for j in range(line, 0, -1):
             for i in range(self.cx):
-                self.data[i][j] = self.data[i][j-1]
+                self.data[i][j] = self.data[i][j - 1]
 
     # 根据当前下落方块消掉所有满行
     def erase_full(self):
@@ -178,20 +169,18 @@ class Tetris:
         count = len(lines)
         for j in lines:
             self._erase_line(j)
-            # 计算积分
+        # 计算积分
         SCORE = {1: 100, 2: 300, 3: 700, 4: 1500}
         last_score = self.score
         if(count > 0):
             self.score += SCORE[count]
         # 加速
-        if(last_score//10000 != self.score // 10000):
+        if(last_score // 10000 != self.score // 10000):
             self.speed += 1
 
     # 判断并实际移动
-
     def _check_and_move(self, offset_i, offset_j):
-        box = copy.copy(self.curr_box)
-        box.move(offset_i, offset_j)
+        (box := copy.copy(self.curr_box)).move(offset_i, offset_j)
         if not self.judge_conflict(box):
             self.curr_box.move(offset_i, offset_j)
             return True
@@ -199,7 +188,7 @@ class Tetris:
             return False
 
     def getpos(self, i, j):
-        return self.left+i*self.GRID, self.top+j*self.GRID
+        return self.left + i * self.GRID, self.top + j * self.GRID
 
     def draw(self):
         px.cls(px.COLOR_BLACK)
@@ -227,13 +216,13 @@ class Tetris:
     def draw_sep_lines(self):
         sep_color = px.COLOR_GREEN
         # 画横隔线
-        for i in range(self.cy+1):
-            px.line(self.left, self.top+i*self.GRID, self.left +
-                    (self.cx)*self.GRID, self.top+i*self.GRID, sep_color)
+        for i in range(self.cy + 1):
+            px.line(self.left, y := self.top + i * self.GRID, self.left +
+                    self.cx * self.GRID, y, sep_color)
         # 画竖隔线
-        for i in range(self.cx+1):
-            px.line(self.left+i*self.GRID, self.top,
-                    self.left+i*self.GRID, self.top+(self.cy)*self.GRID, sep_color)
+        for i in range(self.cx + 1):
+            px.line(x := self.left + i * self.GRID, self.top,
+                    x, self.top + self.cy * self.GRID, sep_color)
 
         if self.state == State.END:
             px.text(80, 50, "You Lost !!!", px.COLOR_RED)
@@ -257,7 +246,7 @@ class Tetris:
         if not self.next_box:
             return
         for i, j in self.next_box.data():
-            self.draw_block(140 + i*self.GRID, 20+j*self.GRID, True)
+            self.draw_block(140 + i * self.GRID, 20 + j * self.GRID, True)
 
 
 Tetris(240, 135)
