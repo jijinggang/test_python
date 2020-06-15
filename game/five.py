@@ -21,8 +21,7 @@ class Game:
         if self.win != 0:
             return
         if xel.btnp(xel.MOUSE_LEFT_BUTTON):
-            ij = self.getgrid(xel.mouse_x, xel.mouse_y)
-            if ij:
+            if ij := self.getgrid(xel.mouse_x, xel.mouse_y):
                 i = ij[0]
                 j = ij[1]
                 if self.data[i][j] == 0:
@@ -51,14 +50,14 @@ class Game:
         l2 = [(i, j+diff) for diff in range(-4, 4)]
         l3 = [(i+diff, j+diff) for diff in range(-4, 4)]
         l4 = [(i+diff, j-diff) for diff in range(-4, 4)]
-        for l in [l1, l2, l3, l4]:
-            if(self._check_win_line(l, self.data[i][j])):
+        for line in [l1, l2, l3, l4]:
+            if self._check_win_line(line, self.data[i][j]):
                 return True
         return False
 
-    def _check_win_line(self, l, val):
+    def _check_win_line(self, line, val):
         count = 0
-        for (i, j) in l:
+        for (i, j) in line:
             if(self.data[i][j] == val):
                 count += 1
                 if(count == 5):
