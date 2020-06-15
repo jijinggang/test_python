@@ -1,7 +1,4 @@
 # 浮点数转二进制
-from myshell import CheckChange
-
-
 def float2bin(number):
 
     def int2float(num):
@@ -57,6 +54,7 @@ def test_os():
 
 
 def test_file():
+    import os
     with open("1.txt", 'a+') as f:
         f.write("hello world")
     with open("1.txt", 'r') as f:
@@ -113,10 +111,10 @@ def test_process():
 
 def test_collections():
     print("list:")
-    l = []
+    lst = []
     for i in range(1, 10):
-        l.append(i)
-    for i in l:
+        lst.append(i)
+    for i in lst:
         print(i)
 
     print("collections:")

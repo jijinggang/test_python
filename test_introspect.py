@@ -4,11 +4,11 @@ import inspect
 
 
 def f1(x, y):
-    return x+y
+    return x + y
 
 
 def f2(x: int, y: int) -> int:
-    return x+y
+    return x + y
 
 
 def test_dir():

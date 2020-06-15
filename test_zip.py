@@ -20,7 +20,7 @@ def zippath(zipname, path):
     with zipfile.ZipFile(zipname, 'w', zipfile.ZIP_DEFLATED) as zp:
         for root, dirs, files in os.walk("d:/_m"):
             for file in files:
-                zp.write(root+"/"+file)
+                zp.write(root + "/" + file)
 
 # 向现有zip中添加文件
 

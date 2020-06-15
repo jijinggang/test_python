@@ -20,7 +20,7 @@ def pause_and_exit(status):
 # dir 设置执行命令的当前路径
 # exit_on_error 如果为True,则执行脚本退出码不为0时,自动暂停,等用户按任意键后退出
 def call(cmd: str, dir=None, exit_on_error=True):
-    if dir == None:
+    if not dir:
         dir = os.getcwd()
     proc = subprocess.run(cmd, shell=True, cwd=dir)
     code = proc.returncode
@@ -115,7 +115,7 @@ class _CheckChange:
     def __init__(self, inputs: list, outputs: list, key: str, check_file_not_svn=True):
 
         path, name = os.path.split(key)
-        self.file = os.path.join(path, ".checkdb", name+".db")
+        self.file = os.path.join(path, ".checkdb", name + ".db")
         # self.file = os.path.join(os.getcwd(), ".checkdb", key+".db")
         ensure_dir(self.file)
 

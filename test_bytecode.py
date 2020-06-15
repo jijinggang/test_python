@@ -17,7 +17,7 @@ class Function:
 
     def _dispatch(self, instruction, arg):
         opname = dis.opname[instruction]
-        #print(opname, arg)
+        # print(opname, arg)
         if opname.startswith("BINARY_"):
             return self.BINARY_Any(opname[len("BINARY_"):])
         elif opname.startswith("UNARY_"):
@@ -53,11 +53,11 @@ class Function:
             # if(instruction >= dis.HAVE_ARGUMENT):
             # 指令和参数各占一个字节
             arg = self._parse_arg(
-                instruction, co_code[self._instruction_pos], self._instruction_pos+1)
+                instruction, co_code[self._instruction_pos], self._instruction_pos + 1)
             self._instruction_pos += 1
             result = self._dispatch(instruction, arg)
             if result is not None:
-                #print("return ", result)
+                # print("return ", result)
                 return result[0]
 
     def _jump(self, pos):
@@ -110,7 +110,7 @@ class Function:
     # 函数,采用递归调用处理
 
     def MAKE_FUNCTION(self, default_argc):
-        name = self._stack.pop()
+        _ = self._stack.pop()  # name
         code = self._stack.pop()
         defaults = self._popn(default_argc)
         vm = Function(code, *defaults, self._locals)
@@ -138,8 +138,8 @@ class Function:
     UNARY_OP = {
         'POSITIVE': operator.pos,
         'NEGATIVE': operator.neg,
-        'NOT':      operator.not_,
-        'INVERT':   operator.invert,
+        'NOT':      operator.not_,      # noqa
+        'INVERT':   operator.invert,    # noqa
     }
 
     def UNARY_Any(self, opname):
@@ -148,19 +148,19 @@ class Function:
 
     # 二元操作符
     BINARY_OP = {
-        'POWER':    operator.pow,
-        'MULTIPLY': operator.mul,
-        'FLOOR_DIVIDE': operator.floordiv,
-        'TRUE_DIVIDE':  operator.truediv,
-        'MODULO':   operator.mod,
-        'ADD':      operator.add,
-        'SUBTRACT': operator.sub,
-        'SUBSCR':   operator.getitem,
-        'LSHIFT':   operator.lshift,
-        'RSHIFT':   operator.rshift,
-        'AND':      operator.and_,
-        'XOR':      operator.xor,
-        'OR':       operator.or_,
+        'POWER':    operator.pow,       # noqa
+        'MULTIPLY': operator.mul,       # noqa
+        'FLOOR_DIVIDE': operator.floordiv,  # noqa
+        'TRUE_DIVIDE':  operator.truediv,   # noqa
+        'MODULO':   operator.mod,       # noqa
+        'ADD':      operator.add,       # noqa
+        'SUBTRACT': operator.sub,       # noqa
+        'SUBSCR':   operator.getitem,   # noqa
+        'LSHIFT':   operator.lshift,    # noqa
+        'RSHIFT':   operator.rshift,    # noqa
+        'AND':      operator.and_,      # noqa
+        'XOR':      operator.xor,       # noqa
+        'OR':       operator.or_,       # noqa
     }
 
     def BINARY_Any(self, opname):

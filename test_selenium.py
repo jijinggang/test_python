@@ -2,14 +2,9 @@
 1. pip install selenium
 2. 下载chromedriver, 从 http://npm.taobao.org/mirrors/chromedriver/ 找对应自己chrome的版本
 '''
-import sys
+
 import os
 from selenium.common.exceptions import InvalidArgumentException
-from fake_useragent import UserAgent
-from selenium.webdriver.support.expected_conditions import presence_of_element_located
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
 from selenium import webdriver
 
 
@@ -22,7 +17,7 @@ class util:
         for file in files:
             ext = os.path.splitext(file)[1].lower()
             if len(exts) == 0 or ext in exts:
-                results.append(dir+"/"+file)
+                results.append(dir + "/" + file)
         return results
 
 

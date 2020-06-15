@@ -18,7 +18,7 @@ def main():
         if event in ('OK'):
             sg.Popup(
                 f"Name:{values[0]}, Password:{values[1]}, File:{values[2]}")
-        elif event in(None, 'Cancel'):
+        elif event in (None, 'Cancel'):
             sg.Popup("Cancel")
             break
     win.close()

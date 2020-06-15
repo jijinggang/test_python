@@ -16,7 +16,7 @@ class _MyHttpdHandler(http.server.BaseHTTPRequestHandler):
         files = os.listdir(path)
         td_html = ""
         for file in files:
-            if(os.path.isdir(path+"/"+file)):
+            if(os.path.isdir(path + "/" + file)):
                 file += "/"
             td_html += f'<tr><td><a href="{file}">{file}</a></td></tr>'
         html = f"""<html><head><meta charset="utf-8"></head><body><table>{td_html}</table><body></html>"""
@@ -70,7 +70,7 @@ def _md_handler(path, wfile):
 
     pattern = re.compile(r"^---[-]*$", re.MULTILINE)
     result = re.search(pattern, content)
-    if(result == None):
+    if not result:
         # base markdown
         md = markdown.markdown(content)
         html = f'<html><head><meta charset="utf-8"></head><body>{md}</body></html>'

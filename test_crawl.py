@@ -17,7 +17,7 @@ def download(url):
     content = requests.get(url).content
     md5 = hashlib.md5()
     md5.update(content)
-    name = '../.down/'+md5.hexdigest()+".gf"
+    name = '../.down/' + md5.hexdigest() + ".gf"
     if(os.path.exists(name)):
         print("skip")
         return
@@ -68,7 +68,7 @@ def main(start_url):
     print("start crawl:", url)
     while True:
         try:
-            #session = rh.HTMLSession()
+            # session = rh.HTMLSession()
             r = session.get(url)
             _deal_with_current(r)
             url = _get_next_page(r)
