@@ -23,7 +23,7 @@ class _MyHttpdHandler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(html.encode())
 
     def _do_get_file(self, path):
-        #print("path:", path)
+        # print("path:", path)
         mime = mimetypes.guess_type(path)[0]
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-type", f"{mime}; charset=utf-8")
