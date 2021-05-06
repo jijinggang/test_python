@@ -11,6 +11,8 @@ from enum import Enum
 from threading import Thread
 import tkinter.messagebox as msgbox
 
+# pyinstaller打包成一个独立文件后,用此函数取回解压后的目录
+
 
 def get_start_path():
     import sys
@@ -22,45 +24,58 @@ def get_start_path():
     return bundle_dir
 
 
-class Event(Enum):
+class EDownload(Enum):
     START = 1
     UPDATE = 2
     END = 3
 
 
 # 登陆器界面
-class Launcher:
+class Launcher(tk.Tk):
     def __init__(self):
-        self.win = tk.Tk()
-        self.win.title("Launcher")
+        super().__init__()
+        self.title("Launcher")
+        #self.win = tk.Tk()
         # self.win.geometry('1280x720')
-        util.center_window(self.win, 1280, 720)
+        util.center_window(self, 1280, 720)
         self.init_image()
         self.init_progress()
 
-        button = tk.Button(self.win, text='Running', command=self.show)
-        button.place(x=950, y=680)
+        #button = tk.Button(self.win, text='Running', command=self.show)
+        #button.place(x=950, y=680)
         self.init_updater()
-        self.win.mainloop()
+        self.mainloop()
 
     def init_progress(self):
-        self.progress = ttk.Progressbar(self.win)
-        self.progress.place(x=100, y=700, width=800, height=5)
+        self.progress = ttk.Progressbar(self)
+        #self.progress.place(x=100, y=100, width=800, height=5)
         # 进度值最大值
         self.progress['maximum'] = 100
         # 进度值初始值
         self.progress['value'] = 0
 
+    def changeSize(self, event):
+        w = self.winfo_width()
+        h = self.winfo_height()
+        self.progress.place(x=100, y=h-100, width=w-100*2, height=5)
+        # self.photo = self.photo_org.111 zoom(
+        #    w/self.photo_org.width(), h/self.photo_org.height())
+        #self.canvas.image = self.photo
+
     def init_image(self):
         import os.path
         start_path = get_start_path()
         print(start_path)
-        self.photo = tk.PhotoImage(file=os.path.join(
+        self.photo_org = tk.PhotoImage(file=os.path.join(
             start_path, 'bk.png'))
-        self.image = tk.Canvas(
-            self.win, width=self.photo.width(), height=self.photo.height())
-        self.image.pack()
-        self.image.create_image(0, 0, anchor=tk.NW, image=self.photo)
+        self.canvas = tk.Label(self, image=self.photo_org,
+                               width=1280, height=720)
+        self.canvas.pack()
+
+        #self.canvas.pack(fill=tk.BOTH, expand=tk.YES)
+        #self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
+        # self.canvas.addtag_all("all")
+        self.bind('<Configure>', self.changeSize)
 
     def show(self):
         pass
@@ -71,13 +86,13 @@ class Launcher:
         #     self.win.update()
         #     time.sleep(0.05)
 
-    def callback(self, evt: Event, value):
-        if evt == Event.START:
+    def callback(self, evt: EDownload, value):
+        if evt == EDownload.START:
             self.progress['maximum'] = value
-        elif evt == Event.UPDATE:
+        elif evt == EDownload.UPDATE:
             self.progress['value'] += value
-        elif evt == Event.END:
-            msgbox.showinfo("", 'update completed!')
+        elif evt == EDownload.END:
+            msgbox.showinfo(self.title(), 'update completed!')
             pass
 
     def init_updater(self):
@@ -109,10 +124,10 @@ class Updater(Thread):
             if self.check_diff(local, size, md5):
                 downfiles.append((local, remote))
                 downsize += size
-        self.callback(Event.START, downsize)
+        self.callback(EDownload.START, downsize)
         for local, remote in downfiles:
             self.download_file(remote, local)
-        self.callback(Event.END, 0)
+        self.callback(EDownload.END, 0)
     # 下载一个大文件
 
     def download_file(self, remote, local):
@@ -122,7 +137,7 @@ class Updater(Thread):
                 for chunk in res.iter_content(chunk_size=1024):
                     if chunk:
                         fd.write(chunk)
-                        self.callback(Event.UPDATE, len(chunk))
+                        self.callback(EDownload.UPDATE, len(chunk))
     # 检查文件是否跟服务器相同
 
     def check_diff(self, local, size, md5):
