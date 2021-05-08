@@ -37,8 +37,10 @@ class Launcher(tk.Tk):
         self.title("Launcher")
         #self.win = tk.Tk()
         # self.win.geometry('1280x720')
-        util.center_window(self, 1280, 720)
-        self.init_image()
+        self.w = 1280
+        self.h = 720
+        util.center_window(self, self.w, self.h)
+        self.init_bk()
         self.init_progress()
 
         #button = tk.Button(self.win, text='Running', command=self.show)
@@ -48,34 +50,33 @@ class Launcher(tk.Tk):
 
     def init_progress(self):
         self.progress = ttk.Progressbar(self)
-        #self.progress.place(x=100, y=100, width=800, height=5)
+        w = self.winfo_reqwidth()
+        h = self.winfo_reqheight()
+        self.progress.place(x=50, y=self.h-30, width=self.w-50*2, height=8)
         # 进度值最大值
         self.progress['maximum'] = 100
         # 进度值初始值
-        self.progress['value'] = 0
+        self.progress['value'] = 100
 
     def changeSize(self, event):
         w = self.winfo_width()
         h = self.winfo_height()
-        self.progress.place(x=100, y=h-100, width=w-100*2, height=5)
-        # self.photo = self.photo_org.111 zoom(
-        #    w/self.photo_org.width(), h/self.photo_org.height())
-        #self.canvas.image = self.photo
+        self.progress.place(x=100, y=h-100, width=w-100*2, height=8)
 
-    def init_image(self):
-        import os.path
+    def init_bk_img(self):
         start_path = get_start_path()
         print(start_path)
-        self.photo_org = tk.PhotoImage(file=os.path.join(
+        self.bk_img = tk.PhotoImage(file=os.path.join(
             start_path, 'bk.png'))
-        self.canvas = tk.Label(self, image=self.photo_org,
-                               width=1280, height=720)
-        self.canvas.pack()
 
-        #self.canvas.pack(fill=tk.BOTH, expand=tk.YES)
-        #self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
-        # self.canvas.addtag_all("all")
-        self.bind('<Configure>', self.changeSize)
+    def init_bk(self):
+        import os.path
+
+        self.bk = tk.Label(self, image=self.bk_img,
+                           width=1280, height=720)
+        self.bk.pack()
+
+        #self.bind('<Configure>', self.changeSize)
 
     def show(self):
         pass
