@@ -55,6 +55,7 @@ python -m IPython 1.ipy
 - %pwd 显示当前目录
 - %run 运行一个python文件
 - %set_env 设置环境变量
+- !xxx 执行xxx命令,执行后用`_exit_code`获取命令退出码 
 
 ## 更多Python示例代码
 <https://github.com/gto76/python-cheatsheet>
