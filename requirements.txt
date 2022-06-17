@@ -5,3 +5,4 @@ PySimpleGUI
 PyPDF2
 Pillow
 fastapi
+pywebio
