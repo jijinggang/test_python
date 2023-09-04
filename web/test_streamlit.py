@@ -12,13 +12,18 @@ st.set_page_config(
         'About': "# This is a header. This is an *extremely* cool app!"
     }
 )
-if "islogin" not in st.session_state:
+print(".........")
+if 'userid' not in st.session_state:
     st.session_state.userid= random.randint(0,99999999);
     st.session_state.islogin = False
+    st.session_state.name="b"
 
 def login():
+    value = st.selectbox("name",["a","b","c"],key='name')
+    st.text(value)
     if( st.session_state.islogin):
         st.title("hello world")
+
     else:
         st.text(st.session_state.userid)
         st.text_area('')
@@ -141,6 +146,22 @@ def main():
     sel =st.sidebar.selectbox("选择命令：",cmds.keys())
     cmds[sel]()
 
+def main_router():
+    cmds = {"login":login,"df":df,"de":de,"button":button,"column":column,"tabs":tabs,"empty":empty,"chat":chat,"echo":echo,"component":component}
+    with st.sidebar:
+        for k in cmds:
+            st.markdown(f"[{k}](/?r={k})")
+    params = st.experimental_get_query_params()
+    
+    if(params.get('r')):
+        sel = params.get('r')[0]
+        if( sel in cmds):
+            cmds[sel]()
+        else:
+            st.text("error")
+
+
 
 if __name__ == '__main__':
-    main()
+    #main()
+    main_router()
