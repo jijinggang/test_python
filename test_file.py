@@ -34,8 +34,12 @@ def test_merge():
 if __name__ == '__main__':
     args = sys.argv[1:]
     match args:
+        case ['merge',file1,file2]:
+            merge(file1,file2,file1+".mg")
         case ['merge',file1,file2,output]:
             merge(file1,file2,output)
+        case ['unmerge',file]:
+            unmerge(file,file+".1",file+".2")
         case ['unmerge',file,out1,out2]:
             unmerge(file,out1,out2)
         case _:
