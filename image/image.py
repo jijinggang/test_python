@@ -85,6 +85,14 @@ def split_image(file, reverse=False):
         img.save(splitext(file)[0] + "/" + f"{index}".zfill(2) +".png")
         index = index + 1
 
+    # 循环显示图片
+    for img in results:
+        img.show()
+
+
+
+
+
     # 打开文件夹
     os.system(f"start explorer {splitext(file)[0]}")
 
