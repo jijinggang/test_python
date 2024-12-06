@@ -8,7 +8,8 @@ from PIL import Image
 # 裁剪空白透明区域
 def crop_blank(file):
     with Image.open(file) as img:
-        img_cropped = img.crop(img.getbbox())
+        print(img.getbbox())
+        img_cropped = img.crop(img.getbbox(alpha_only=False))
         img_cropped.save(splitext(file)[0] + "_cropped.png")
 
 
@@ -85,20 +86,12 @@ def split_image(file, reverse=False):
         img.save(splitext(file)[0] + "/" + f"{index}".zfill(2) +".png")
         index = index + 1
 
-    # 循环显示图片
-    for img in results:
-        img.show()
-
-
-
-
-
     # 打开文件夹
     os.system(f"start explorer {splitext(file)[0]}")
 
 
 # 把git每一帧存为图片
-def _gif_to_images(file,MAX_FRAME=16):
+def _gif_to_images(file,MAX_FRAME=32):
     import imageio
     images = imageio.mimread(file)
     image_path = file.split(".")[0]
@@ -119,7 +112,7 @@ def _gif_to_images(file,MAX_FRAME=16):
         img.show()
 
 # 把mp4存成图片
-def _mp4_to_images(file, MAX_FRAME=16):
+def _mp4_to_images(file, MAX_FRAME=32):
     import cv2
     cap = cv2.VideoCapture(file)
     image_path = file.split(".")[0]
